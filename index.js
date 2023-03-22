@@ -7,6 +7,9 @@ const port = 3000
 const saltRounds = 10
 const secret = 'secret'
 
+const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
+    modulusLength: 2048,
+});
 const auth = {}
 
 app.use(express.json())
@@ -28,21 +31,22 @@ app.post('/signin', async (req, res) => {
     const result = await bcrypt.compare(password, auth[user])
     if (result) {
         const tokenHeader = {
-            alg: 'sha256',
+            alg: 'RS256',
             typ: 'JWT'
         }
         const tokenPayload = {
             name: user,
             role: 'user'
         }
-        const headerBuffer = Buffer.from(JSON.stringify(tokenHeader)).toString('base64')
-        const payloadBuffer = Buffer.from(JSON.stringify(tokenPayload)).toString('base64')
-        const signature = crypto
-            .createHash('sha256')
-            .update(headerBuffer + '.' + payloadBuffer + secret)
-            .digest('base64');
-
-        res.send(JSON.stringify({token: headerBuffer + '.' + payloadBuffer + '.' + Buffer.from(signature).toString('base64')}))
+        const headerBuffer = Buffer.from(JSON.stringify(tokenHeader))
+        const payloadBuffer = Buffer.from(JSON.stringify(tokenPayload))
+        const signature = crypto.sign('sha256',payloadBuffer, {
+            key: privateKey,
+            padding: crypto.constants.RSA_PKCS1_PADDING
+        })
+        const signatureString = signature.toString('base64')
+        const jwt = `${headerBuffer.toString('base64')}.${payloadBuffer.toString('base64')}.${signatureString}`
+        res.send(JSON.stringify({jwt}))
     }
     else {
         res.send(500)
