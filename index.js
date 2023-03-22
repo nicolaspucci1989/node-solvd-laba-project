@@ -30,6 +30,12 @@ function encodeToBase64Url(data) {
 	return Buffer.from(JSON.stringify(data)).toString("base64url")
 }
 
+function signToken(data, secret) {
+	return crypto.createHmac('sha256', secret)
+		.update(data)
+		.digest('base64url')
+}
+
 app.post('/signin', async (req, res) => {
 	const { user, password } = req.body
 	const result = await bcrypt.compare(password, auth[user])
@@ -38,17 +44,17 @@ app.post('/signin', async (req, res) => {
 			alg: 'HS256',
 			typ: 'JWT'
 		}
+
 		const tokenPayload = {
 			name: user,
 			role: 'user'
 		}
-		const encodedData = Buffer.from(JSON.stringify(tokenHeader)).toString('base64url') +
-			'.' +
-			Buffer.from(JSON.stringify(tokenPayload)).toString('base64url')
 
-		const signature = crypto.createHmac('sha256', secret)
-			.update(encodedData)
-			.digest('base64url')
+		const encodedData = encodeToBase64Url(tokenHeader) +
+			'.' +
+			encodeToBase64Url(tokenPayload)
+
+		const signature = signToken(encodedData, secret)
 
 		const jwt = encodedData + '.' + signature
 		res.send(JSON.stringify({ jwt }))
