@@ -26,15 +26,6 @@ app.post('/signup', async (req, res) => {
 	res.send(hashedPassword)
 })
 
-function encodeToBase64Url(data) {
-	return Buffer.from(JSON.stringify(data)).toString("base64url")
-}
-
-function signToken(data, secret) {
-	return crypto.createHmac('sha256', secret)
-		.update(data)
-		.digest('base64url')
-}
 
 app.post('/signin', async (req, res) => {
 	const { user, password } = req.body
@@ -66,3 +57,13 @@ app.post('/signin', async (req, res) => {
 app.listen(port, () => {
 	console.log(`Example app listening on port ${port}`)
 })
+
+function encodeToBase64Url(data) {
+	return Buffer.from(JSON.stringify(data)).toString("base64url")
+}
+
+function signToken(data, secret) {
+	return crypto.createHmac('sha256', secret)
+		.update(data)
+		.digest('base64url')
+}
