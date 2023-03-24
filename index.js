@@ -7,9 +7,7 @@ const port = 3000
 const saltRounds = 10
 const secret = 'secret'
 
-const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
-	modulusLength: 2048,
-});
+// store users
 const auth = {}
 
 app.use(express.json())
