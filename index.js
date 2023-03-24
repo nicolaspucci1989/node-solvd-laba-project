@@ -67,16 +67,33 @@ app.listen(port, () => {
 })
 
 function verifyAuth(req, res, next) {
-	const token = req.headers.authorization.split('Bearer ').pop()
-	const [header, payload, signature] = token.split('.')
+	let token
+	if (
+		req.headers.authorization &&
+		req.headers.authorization.startsWith("Bearer")
+	) {
+		try {
+			token = req.headers.authorization.split('Bearer ').pop()
+			const [header, payload, signature] = token.split('.')
 
-	const tokenChecks = verifyToken(header, payload, signature, secret)
+			const tokenChecks = verifyToken(header, payload, signature, secret)
 
-	if (tokenChecks) {
-		next()
-	} else {
-		res.rejectUnauthorized()
+			if (tokenChecks) {
+				next()
+			} else {
+				res.rejectUnauthorized()
+			}
+		} catch (e) {
+			res.status(401)
+			throw new Error("Auth failed")
+		}
 	}
+
+	if (!token) {
+		res.status(401)
+		throw new Error("Auth failed")
+	}
+
 }
 
 function verifyToken(headerEncoded, payloadEncoded, signatureEncoded, secret) {
