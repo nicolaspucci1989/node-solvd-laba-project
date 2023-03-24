@@ -27,6 +27,14 @@ app.post('/signup', async (req, res) => {
 })
 
 
+app.post('/test',
+	verifyAuth,
+	(req, res, next) => {
+		res.send()
+	}
+)
+
+
 app.post('/signin', async (req, res) => {
 	const { user, password } = req.body
 	const result = await bcrypt.compare(password, auth[user])
@@ -57,6 +65,27 @@ app.post('/signin', async (req, res) => {
 app.listen(port, () => {
 	console.log(`Example app listening on port ${port}`)
 })
+
+function verifyAuth(req, res, next) {
+	const token = req.headers.authorization.split('Bearer ').pop()
+	const [header, payload, signature] = token.split('.')
+
+	const tokenChecks = verifyToken(header, payload, signature, secret)
+
+	if (tokenChecks) {
+		next()
+	} else {
+		res.rejectUnauthorized()
+	}
+}
+
+function verifyToken(headerEncoded, payloadEncoded, signatureEncoded, secret) {
+	const encodedData = Buffer.from(headerEncoded + '.' + payloadEncoded);
+	const generatedSignature = crypto.createHmac('sha256', secret)
+		.update(encodedData)
+		.digest('base64url');
+	return generatedSignature === signatureEncoded
+}
 
 function encodeToBase64Url(data) {
 	return Buffer.from(JSON.stringify(data)).toString("base64url")
