@@ -33,9 +33,16 @@ app.post('/test',
 )
 
 
-app.post('/signin', async (req, res) => {
+app.post('/signin', async (req, res, next) => {
 	const { user, password } = req.body
-	const result = await bcrypt.compare(password, auth[user])
+	let result
+
+	try {
+		result = await bcrypt.compare(password, auth[user])
+	} catch (e) {
+		next('error')
+	}
+
 	if (result) {
 		const tokenHeader = {
 			alg: 'HS256',
