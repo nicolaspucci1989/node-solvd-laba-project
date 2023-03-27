@@ -16,12 +16,16 @@ app.get('/', (req, res) => {
 	res.send('Hello World!')
 })
 
-app.post('/signup', async (req, res) => {
+app.post('/signup', async (req, res, next) => {
 	const { user, password } = req.body
-	const hashedPassword = await bcrypt.hash(password, saltRounds)
-	auth[user] = hashedPassword
-	console.log(auth)
-	res.send(hashedPassword)
+	try {
+		const hashedPassword = await bcrypt.hash(password, saltRounds)
+		auth[user] = hashedPassword
+		console.log(auth)
+		res.send(hashedPassword)
+	} catch (e) {
+		next('error')
+	}
 })
 
 
